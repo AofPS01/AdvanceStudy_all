@@ -1176,7 +1176,7 @@ connect_bd_net [get_bd_pins xdma_rp/axi_aresetn] [get_bd_pins axi_ic_pcie_rp_mmi
 create_bd_addr_seg -range 0x10000 -offset 0x10000000 [get_bd_addr_spaces xdma_ep/M_AXI_LITE] [get_bd_addr_segs bootrom_bram_ctrl/S_AXI/Mem0] PCIE_EP_BAR_BOOTROM
 create_bd_addr_seg -range 0x1000 -offset 0x10010000 [get_bd_addr_spaces xdma_ep/M_AXI_LITE] [get_bd_addr_segs axi_mm_base_reg/S_AXI/Reg] PCIE_EP_BAR_AXI_MM_BASE_REG
 create_bd_addr_seg -range 0x1000 -offset 0x10011000 [get_bd_addr_spaces xdma_ep/M_AXI_LITE] [get_bd_addr_segs host_uart/S_AXI/Reg] PCIE_EP_BAR_HOST_UART
-#  create_bd_addr_seg -range 0x1000 -offset 0x10012000 [get_bd_addr_spaces xdma_ep/M_AXI_LITE] [get_bd_addr_segs role_decoupler/s_axi_reg/Reg] PCIE_EP_BAR_ROLE_DECOUPLER
+# create_bd_addr_seg -range 0x1000 -offset 0x10012000 [get_bd_addr_spaces xdma_ep/M_AXI_LITE] [get_bd_addr_segs role_decoupler/s_axi_reg/Reg] PCIE_EP_BAR_ROLE_DECOUPLER
 create_bd_addr_seg -range 0x100000 -offset 0x10100000 [get_bd_addr_spaces xdma_ep/M_AXI_LITE] [get_bd_addr_segs u_role/s_axi_ctrl/reg0] PCIE_EP_BAR_ROLE_CTRL
 create_bd_addr_seg -range 0x200000000 -offset 0x0 [get_bd_addr_spaces xdma_ep/M_AXI_BYPASS] [get_bd_addr_segs ddr4_mig/C0_DDR4_MEMORY_MAP/C0_DDR4_ADDRESS_BLOCK] PCIE_EP_BAR_DDR
 create_bd_addr_seg -range 0x200000000 -offset 0x0 [get_bd_addr_spaces xdma_ep/M_AXI] [get_bd_addr_segs ddr4_mig/C0_DDR4_MEMORY_MAP/C0_DDR4_ADDRESS_BLOCK] PCIE_EP_DMA_DDR
@@ -1186,11 +1186,15 @@ create_bd_addr_seg -range 0x10000 -offset 0x10000000 [get_bd_addr_spaces u_role/
 create_bd_addr_seg -range 0x10000 -offset 0x30000000 [get_bd_addr_spaces u_role/m_axi_io] [get_bd_addr_segs role_uart/S_AXI/Reg] ROLE_UART
 create_bd_addr_seg -range 0x200000000 -offset 0x0 [get_bd_addr_spaces u_role/m_axi_mem] [get_bd_addr_segs ddr4_mig/C0_DDR4_MEMORY_MAP/C0_DDR4_ADDRESS_BLOCK] ROLE_DDR
 
-save_bd_design
+## PCIe RP address space
 create_bd_addr_seg -range 0x00100000 -offset 0x50000000 [get_bd_addr_spaces u_role/m_axi_io] [get_bd_addr_segs xdma_rp/S_AXI_B/BAR0] PCIE_RP_S_BAR
 create_bd_addr_seg -range 0x00800000 -offset 0x60000000 [get_bd_addr_spaces u_role/m_axi_io] [get_bd_addr_segs xdma_rp/S_AXI_LITE/CTL0] PCIE_RP_S_LITE
 create_bd_addr_seg -range 0x200000000 -offset 0x0 [get_bd_addr_spaces xdma_rp/M_AXI_B] [get_bd_addr_segs u_role/s_axi_dma/reg0] PCIE_RP_DMA
-#set_property range 256M [get_bd_addr_segs {xdma_rp/M_AXI_B/PCIE_RP_DMA}]
+# set_property range 256M [get_bd_addr_segs {xdma_rp/M_AXI_B/PCIE_RP_DMA}]
+
+## Ethernet AXI in address space
+create_bd_addr_seg -range 0x00040000 -offset 0x40000000 [get_bd_addr_spaces u_role/m_axi_io] [get_bd_addr_segs axi_ethernet/s_axi/Reg0] ETH_IO
+create_bd_addr_seg -range 0x00010000 -offset 0x40040000 [get_bd_addr_spaces u_role/m_axi_io] [get_bd_addr_segs axi_ethernet_dma/S_AXI_LITE/Reg] ETH_DMA_IO
 
 
 #=============================================
