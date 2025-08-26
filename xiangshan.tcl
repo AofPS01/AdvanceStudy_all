@@ -1195,7 +1195,9 @@ create_bd_addr_seg -range 0x200000000 -offset 0x0 [get_bd_addr_spaces xdma_rp/M_
 ## Ethernet AXI in address space
 create_bd_addr_seg -range 0x00040000 -offset 0x40000000 [get_bd_addr_spaces u_role/m_axi_io] [get_bd_addr_segs axi_ethernet/s_axi/Reg0] ETH_IO
 create_bd_addr_seg -range 0x00010000 -offset 0x40040000 [get_bd_addr_spaces u_role/m_axi_io] [get_bd_addr_segs axi_ethernet_dma/S_AXI_LITE/Reg] ETH_DMA_IO
-
+create_bd_addr_seg -range 0x100000000 -offset 0x00000000 [get_bd_addr_spaces axi_ethernet_dma/Data_SG] [get_bd_addr_segs u_role/s_axi_dma/reg0] ETH_DMA_SG
+create_bd_addr_seg -range 0x100000000 -offset 0x00000000 [get_bd_addr_spaces axi_ethernet_dma/Data_MM2S] [get_bd_addr_segs u_role/s_axi_dma/reg0] ETH_DMA_MM2S
+create_bd_addr_seg -range 0x100000000 -offset 0x00000000 [get_bd_addr_spaces axi_ethernet_dma/Data_S2MM] [get_bd_addr_segs u_role/s_axi_dma/reg0] ETH_DMA_S2MM
 
 #=============================================
 # Finish BD creation
