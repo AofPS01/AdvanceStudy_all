@@ -372,8 +372,8 @@ proc create_root_design { parentCell } {
   set_property -dict [list CONFIG.CONST_WIDTH {1} \
     CONFIG.CONST_VAL {0x0} ] $const_gnd
 
-  # Create instance: axi_ethernet_0, and set properties
-  set axi_ethernet_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_ethernet:7.2 axi_ethernet_0 ]
+  # Create instance: axi_ethernet, and set properties
+  set axi_ethernet [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_ethernet:7.2 axi_ethernet ]
   set_property -dict [list \
     CONFIG.ClockSelection {Sync} \
     CONFIG.ENABLE_LVDS {true} \
@@ -384,16 +384,23 @@ proc create_root_design { parentCell } {
     CONFIG.rxlane0_placement {DIFF_PAIR_1} \
     CONFIG.rxnibblebitslice0used {false} \
     CONFIG.txlane0_placement {DIFF_PAIR_1} \
-    ] $axi_ethernet_0
+    ] $axi_ethernet
 
-  # Create instance: axi_ethernet_0_dma, and set properties
-  set axi_ethernet_0_dma [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dma:7.1 axi_ethernet_0_dma ]
+  # Create instance: axi_ethernet_dma, and set properties
+  set axi_ethernet_dma [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dma:7.1 axi_ethernet_dma ]
   set_property -dict [list \
     CONFIG.c_include_mm2s_dre {1} \
     CONFIG.c_include_s2mm_dre {1} \
     CONFIG.c_sg_length_width {16} \
     CONFIG.c_sg_use_stsapp_length {1} \
-    ] $axi_ethernet_0_dma
+    ] $axi_ethernet_dma
+
+  # Create instance: axi_ic_eth_dma, and set properties
+  set axi_ic_eth_dma [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_ic_eth_dma ]
+  set_property -dict [list \
+    CONFIG.NUM_MI {1} \
+    CONFIG.NUM_SI {3} \
+    ] $axi_ic_eth_dma
 
   #=============================================
   # Clock ports
@@ -429,6 +436,10 @@ proc create_root_design { parentCell } {
 
   set dut_rtc_ref_clk_bufg [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.2 dut_rtc_ref_clk_bufg ]
   set_property CONFIG.C_BUF_TYPE {BUFG} $dut_rtc_ref_clk_bufg
+
+  # Ethernet clock
+  set lvdsclk [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 lvdsclk ]
+  set_property -dict [ list CONFIG.FREQ_HZ {625000000} ] $lvdsclk
 
   # Create instance: RTC clock generation
   #  set dut_rtc_clk_gen [create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 dut_rtc_clk_gen]
@@ -468,6 +479,8 @@ proc create_root_design { parentCell } {
   ## (located in SLR2)
   create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rp_rst_gen
 
+  # Create instance: eth_rst_gen
+  create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 eth_rst_gen
 
   #=============================================
   # GT ports
@@ -503,6 +516,23 @@ proc create_root_design { parentCell } {
   #=============================================
 
   create_bd_intf_port -mode Master -vlnv xilinx.com:interface:ddr4_rtl:1.0 c0_ddr4
+
+  #=============================================
+  # Ethernet ports
+  #=============================================
+
+  set mdio2phy [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:mdio_rtl:1.0 mdio2phy ]
+
+  set sgmii2phy [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:sgmii_rtl:1.0 sgmii2phy ]
+
+  set phy_rst_b [ create_bd_port -dir O -from 0 -to 0 -type rst phy_rst_b ]
+
+  set RJ45SEL [ create_bd_port -dir O -from 0 -to 0 -type data RJ45SEL ]
+
+  set dummyport [ create_bd_port -dir I -type rst dummyport ]
+  set_property -dict [ list \
+    CONFIG.POLARITY {ACTIVE_HIGH} \
+    ] $dummyport
 
   #=============================================
   # MISC ports
@@ -602,6 +632,10 @@ proc create_root_design { parentCell } {
 
   connect_bd_net [get_bd_pins dut_rtc_ref_clk_bufg/BUFG_O] \
     [get_bd_pins u_role/rtc_clock]
+
+  # lvds clock (625MHz)
+  connect_bd_intf_net -intf_net lvds_clk_in [get_bd_intf_pins lvdsclk] \
+    [get_bd_intf_pins axi_ethernet/lvds_clk]
 
   #=============================================
   # System reset connection
@@ -910,7 +944,8 @@ connect_bd_net [get_bd_pins const_gnd/dout] \
   [get_bd_pins role_intr_concat/In12] \
   [get_bd_pins role_intr_concat/In13] \
   [get_bd_pins role_intr_concat/In14] \
-  [get_bd_pins role_intr_concat/In15]
+  [get_bd_pins role_intr_concat/In15] \
+  [get_bd_ports RJ45SEL]
 
 connect_bd_net -net pcie_clk [get_bd_pins intr_sync_pcie_slow/fast_clk]
 
@@ -1013,12 +1048,16 @@ set_property -dict [list \
   CONFIG.CLKOUT1_JITTER {265.291} \
   CONFIG.CLKOUT1_PHASE_ERROR {364.943} \
   CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {30} \
+  CONFIG.CLKOUT2_USED {true} \
+  CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {100} \
   CONFIG.MMCM_CLKFBOUT_MULT_F {117.375} \
   CONFIG.MMCM_CLKOUT0_DIVIDE_F {39.125} \
+  CONFIG.MMCM_CLKOUT1_DIVIDE {12} \
   CONFIG.MMCM_DIVCLK_DIVIDE {10} \
   CONFIG.RESET_PORT {resetn} \
   CONFIG.RESET_TYPE {ACTIVE_LOW} \
   CONFIG.USE_LOCKED {false} \
+  CONFIG.NUM_OUT_CLKS {2} \
   ] [get_bd_cells clk_wiz_0]
 
 connect_bd_net [get_bd_ports pcie_ep_perstn] [get_bd_pins clk_wiz_0/resetn]
