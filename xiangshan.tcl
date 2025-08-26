@@ -982,10 +982,6 @@ set_property -dict [list CONFIG.NUM_PORTS {16}] $role_intr_concat
 connect_bd_net [get_bd_pins role_uart/interrupt] [get_bd_pins role_intr_concat/In0]
 
 connect_bd_net [get_bd_pins const_gnd/dout] \
-  [get_bd_pins role_intr_concat/In4] \
-  [get_bd_pins role_intr_concat/In5] \
-  [get_bd_pins role_intr_concat/In6] \
-  [get_bd_pins role_intr_concat/In7] \
   [get_bd_pins role_intr_concat/In8] \
   [get_bd_pins role_intr_concat/In9] \
   [get_bd_pins role_intr_concat/In10] \
@@ -1103,6 +1099,10 @@ connect_bd_net [get_bd_pins axi_ic_pcie_rp_mmio/M01_ARESETN] [get_bd_pins dut_rs
 connect_bd_net [get_bd_pins xdma_rp/interrupt_out] [get_bd_pins role_intr_concat/In1]
 connect_bd_net [get_bd_pins xdma_rp/interrupt_out_msi_vec0to31] [get_bd_pins role_intr_concat/In2]
 connect_bd_net [get_bd_pins xdma_rp/interrupt_out_msi_vec32to63] [get_bd_pins role_intr_concat/In3]
+connect_bd_net [get_bd_pins axi_ethernet_dma/mm2s_introut] [get_bd_pins role_intr_concat/In4]
+connect_bd_net [get_bd_pins axi_ethernet_dma/s2mm_introut] [get_bd_pins role_intr_concat/In5]
+connect_bd_net [get_bd_pins axi_ethernet/mac_irq] [get_bd_pins role_intr_concat/In6]
+connect_bd_net [get_bd_pins axi_ethernet/interrupt] [get_bd_pins role_intr_concat/In7]
 connect_bd_intf_net [get_bd_intf_ports pcie_rp_gt_ref_clk] [get_bd_intf_pins pcie_rp_ref_clk_buf/CLK_IN_D]
 connect_bd_net [get_bd_pins pcie_rp_ref_clk_buf/IBUF_OUT] [get_bd_pins xdma_rp/sys_clk_gt]
 connect_bd_net [get_bd_pins pcie_rp_ref_clk_buf/IBUF_DS_ODIV2] [get_bd_pins xdma_rp/sys_clk]
