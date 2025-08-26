@@ -305,7 +305,7 @@ proc create_root_design { parentCell } {
   ## (located in SLR0)
   set axi_ic_role_io_cross_domain [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_ic_role_io_cross_domain ]
   set_property -dict [ list \
-    CONFIG.NUM_MI {3} \
+    CONFIG.NUM_MI {5} \
     CONFIG.NUM_SI {1} \
     ] $axi_ic_role_io_cross_domain
 
@@ -322,7 +322,7 @@ proc create_root_design { parentCell } {
   set xdma_rp_M_AXI_B [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 xdma_rp_M_AXI_B ]
   set_property -dict [ list \
     CONFIG.NUM_MI {1} \
-    CONFIG.NUM_SI {1} \
+    CONFIG.NUM_SI {2} \
     ] $xdma_rp_M_AXI_B
 
 
@@ -371,6 +371,23 @@ proc create_root_design { parentCell } {
   set const_gnd [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 const_gnd ]
   set_property -dict [list CONFIG.CONST_WIDTH {1} \
     CONFIG.CONST_VAL {0x0} ] $const_gnd
+
+  create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 clk_wiz_0
+  set_property -dict [list \
+    CONFIG.CLKOUT1_JITTER {265.291} \
+    CONFIG.CLKOUT1_PHASE_ERROR {364.943} \
+    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {30} \
+    CONFIG.CLKOUT2_USED {true} \
+    CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {100} \
+    CONFIG.MMCM_CLKFBOUT_MULT_F {117.375} \
+    CONFIG.MMCM_CLKOUT0_DIVIDE_F {39.125} \
+    CONFIG.MMCM_CLKOUT1_DIVIDE {12} \
+    CONFIG.MMCM_DIVCLK_DIVIDE {10} \
+    CONFIG.RESET_PORT {resetn} \
+    CONFIG.RESET_TYPE {ACTIVE_LOW} \
+    CONFIG.USE_LOCKED {true} \
+    CONFIG.NUM_OUT_CLKS {2} \
+    ] [get_bd_cells clk_wiz_0]
 
   # Create instance: axi_ethernet, and set properties
   set axi_ethernet [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_ethernet:7.2 axi_ethernet ]
@@ -637,6 +654,24 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net lvds_clk_in [get_bd_intf_pins lvdsclk] \
     [get_bd_intf_pins axi_ethernet/lvds_clk]
 
+  # Ethernet clock (100MHz, from clk_wiz_0-clk_out2)
+  connect_bd_net -net ethernet_clks [get_bd_pins clk_wiz_0/clk_out2] \
+    [get_bd_pins eth_rst_gen/slowest_sync_clk] \
+    [get_bd_pins axi_ethernet/s_axi_lite_clk] \
+    [get_bd_pins axi_ethernet/axis_clk] \
+    [get_bd_pins axi_ethernet_dma/s_axi_lite_aclk] \
+    [get_bd_pins axi_ethernet_dma/m_axi_sg_aclk] \
+    [get_bd_pins axi_ethernet_dma/m_axi_mm2s_aclk] \
+    [get_bd_pins axi_ethernet_dma/m_axi_s2mm_aclk] \
+    [get_bd_pins axi_ic_eth_dma/ACLK] \
+    [get_bd_pins axi_ic_eth_dma/S00_ACLK] \
+    [get_bd_pins axi_ic_eth_dma/S01_ACLK] \
+    [get_bd_pins axi_ic_eth_dma/S02_ACLK] \
+    [get_bd_pins axi_ic_eth_dma/M00_ACLK] \
+    [get_bd_pins xdma_rp_M_AXI_B/S01_ACLK] \
+    [get_bd_pins axi_ic_role_io_cross_domain/M03_ACLK] \
+    [get_bd_pins axi_ic_role_io_cross_domain/M04_ACLK]
+
   #=============================================
   # System reset connection
   #=============================================
@@ -647,7 +682,8 @@ proc create_root_design { parentCell } {
     [get_bd_pins ddr4_mig_sync_reset/ext_reset_in] \
     [get_bd_pins dut_rst_gen/ext_reset_in] \
     [get_bd_pins pcie_slow_clk_gen/resetn] \
-    [get_bd_pins pcie_slow_clk_rst_gen/ext_reset_in]
+    [get_bd_pins pcie_slow_clk_rst_gen/ext_reset_in] \
+    [get_bd_pins eth_rst_gen/ext_reset_in]
 
   #perstn for PCIe RP
   connect_bd_net [get_bd_ports pcie_rp_perstn] [get_bd_pins rp_rst_gen/peripheral_aresetn]
@@ -723,6 +759,19 @@ proc create_root_design { parentCell } {
     [get_bd_pins bootrom_bram_ctrl/s_axi_aresetn] \
     [get_bd_pins role_uart/s_axi_aresetn] \
     [get_bd_pins host_uart/s_axi_aresetn]
+
+  # Ethernet reset
+  connect_bd_net -net ethernet_resets [get_bd_pins eth_rst_gen/peripheral_aresetn] \
+    [get_bd_pins axi_ethernet_dma/axi_resetn] \
+    [get_bd_pins axi_ethernet/s_axi_lite_resetn] \
+    [get_bd_pins axi_ic_eth_dma/ARESETN] \
+    [get_bd_pins axi_ic_eth_dma/S00_ARESETN] \
+    [get_bd_pins axi_ic_eth_dma/S01_ARESETN] \
+    [get_bd_pins axi_ic_eth_dma/S02_ARESETN] \
+    [get_bd_pins axi_ic_eth_dma/M00_ARESETN] \
+    [get_bd_pins xdma_rp_M_AXI_B/S01_ARESETN] \
+    [get_bd_pins axi_ic_role_io_cross_domain/M03_ARESETN] \
+    [get_bd_pins axi_ic_role_io_cross_domain/M04_ARESETN]
 
   #=============================================
   # AXI interface connection
@@ -968,6 +1017,37 @@ connect_bd_net [get_bd_pins system_ila_0/clk] [get_bd_pins ddr4_mig/addn_ui_clko
 connect_bd_intf_net [get_bd_intf_pins system_ila_0/SLOT_1_AXI] [get_bd_intf_pins u_role/m_axi_io]
 connect_bd_net [get_bd_pins system_ila_0/resetn] [get_bd_pins dut_rst_gen/peripheral_aresetn]
 
+#=============================================
+# Ethernet connection
+#=============================================
+
+# ports connect
+connect_bd_intf_net [get_bd_intf_pins axi_ethernet/sgmii] [get_bd_intf_ports sgmii2phy]
+connect_bd_intf_net [get_bd_intf_pins axi_ethernet/mdio] [get_bd_intf_ports mdio2phy]
+
+connect_bd_net [get_bd_pins axi_ethernet/phy_rst_n] [get_bd_ports phy_rst_b]
+connect_bd_net [get_bd_pins axi_ethernet/dummy_port_in] [get_bd_ports dummyport]
+
+# between ethdma & ethernet connect
+connect_bd_intf_net [get_bd_intf_pins axi_ethernet/s_axis_txc] [get_bd_intf_pins axi_ethernet_dma/M_AXIS_CNTRL]
+connect_bd_intf_net [get_bd_intf_pins axi_ethernet/s_axis_txd] [get_bd_intf_pins axi_ethernet_dma/M_AXIS_MM2S]
+connect_bd_intf_net [get_bd_intf_pins axi_ethernet/m_axis_rxd] [get_bd_intf_pins axi_ethernet_dma/S_AXIS_S2MM]
+connect_bd_intf_net [get_bd_intf_pins axi_ethernet/m_axis_rxs] [get_bd_intf_pins axi_ethernet_dma/S_AXIS_STS]
+
+connect_bd_net [get_bd_pins axi_ethernet/axi_txc_arstn] [get_bd_pins axi_ethernet_dma/mm2s_cntrl_reset_out_n]
+connect_bd_net [get_bd_pins axi_ethernet/axi_txd_arstn] [get_bd_pins axi_ethernet_dma/mm2s_prmry_reset_out_n]
+connect_bd_net [get_bd_pins axi_ethernet/axi_rxd_arstn] [get_bd_pins axi_ethernet_dma/s2mm_prmry_reset_out_n]
+connect_bd_net [get_bd_pins axi_ethernet/axi_rxs_arstn] [get_bd_pins axi_ethernet_dma/s2mm_sts_reset_out_n]
+
+# dma out axi line
+connect_bd_intf_net [get_bd_intf_pins axi_ethernet_dma/M_AXI_SG] [get_bd_intf_pins axi_ic_eth_dma/S00_AXI]
+connect_bd_intf_net [get_bd_intf_pins axi_ethernet_dma/M_AXI_MM2S] [get_bd_intf_pins axi_ic_eth_dma/S01_AXI]
+connect_bd_intf_net [get_bd_intf_pins axi_ethernet_dma/M_AXI_S2MM] [get_bd_intf_pins axi_ic_eth_dma/S02_AXI]
+
+# dma & ethernet axi in
+connect_bd_intf_net [get_bd_intf_pins axi_ethernet/s_axi] [get_bd_intf_pins axi_ic_role_io_cross_domain/M03_AXI]
+connect_bd_intf_net [get_bd_intf_pins axi_ethernet_dma/S_AXI_LITE] [get_bd_intf_pins axi_ic_role_io_cross_domain/M04_AXI]
+
 #################################
 # delete for NP19A
 ################################
@@ -1034,6 +1114,7 @@ connect_bd_net [get_bd_pins xdma_rp_M_AXI_B/M00_ARESETN] [get_bd_pins dut_rst_ge
 connect_bd_net [get_bd_pins xdma_rp_M_AXI_B/ARESETN] [get_bd_pins dut_rst_gen/peripheral_aresetn]
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins xdma_rp_M_AXI_B/M00_AXI] [get_bd_intf_pins u_role/s_axi_dma]
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins xdma_rp_M_AXI_B/S00_AXI] [get_bd_intf_pins xdma_rp/M_AXI_B]
+connect_bd_intf_net -boundary_type upper [get_bd_intf_pins xdma_rp_M_AXI_B/S01_AXI] [get_bd_intf_pins axi_ic_eth_dma/M00_AXI]
 connect_bd_net [get_bd_pins xdma_rp_M_AXI_B/M00_ACLK] [get_bd_pins ddr4_mig/addn_ui_clkout1]
 connect_bd_net [get_bd_pins xdma_rp_M_AXI_B/S00_ARESETN] [get_bd_pins dut_rst_gen/peripheral_aresetn]
 connect_bd_net [get_bd_pins xdma_rp_M_AXI_B/S00_ACLK] [get_bd_pins xdma_rp/axi_aclk]
@@ -1042,24 +1123,7 @@ connect_bd_net [get_bd_pins rp_rst_gen/slowest_sync_clk] [get_bd_pins ddr4_mig/a
 connect_bd_net [get_bd_ports pcie_ep_perstn] [get_bd_pins rp_rst_gen/ext_reset_in]
 connect_bd_net [get_bd_pins rp_rst_gen/dcm_locked] [get_bd_pins ddr4_mig/c0_init_calib_complete]
 
-create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 clk_wiz_0
 connect_bd_net [get_bd_pins xdma_ep/axi_aclk] [get_bd_pins clk_wiz_0/clk_in1]
-set_property -dict [list \
-  CONFIG.CLKOUT1_JITTER {265.291} \
-  CONFIG.CLKOUT1_PHASE_ERROR {364.943} \
-  CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {30} \
-  CONFIG.CLKOUT2_USED {true} \
-  CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {100} \
-  CONFIG.MMCM_CLKFBOUT_MULT_F {117.375} \
-  CONFIG.MMCM_CLKOUT0_DIVIDE_F {39.125} \
-  CONFIG.MMCM_CLKOUT1_DIVIDE {12} \
-  CONFIG.MMCM_DIVCLK_DIVIDE {10} \
-  CONFIG.RESET_PORT {resetn} \
-  CONFIG.RESET_TYPE {ACTIVE_LOW} \
-  CONFIG.USE_LOCKED {false} \
-  CONFIG.NUM_OUT_CLKS {2} \
-  ] [get_bd_cells clk_wiz_0]
-
 connect_bd_net [get_bd_ports pcie_ep_perstn] [get_bd_pins clk_wiz_0/resetn]
 disconnect_bd_net /dut_clk [get_bd_pins ddr4_mig/addn_ui_clkout1]
 connect_bd_net [get_bd_pins clk_wiz_0/clk_out1] [get_bd_pins axi_ic_role_io_cross_domain/S00_ACLK]
@@ -1070,6 +1134,10 @@ set_property CONFIG.C_BUF_TYPE {BUFG} $clk_wiz_bufg
 disconnect_bd_net /dut_clk [get_bd_pins clk_wiz_0/clk_out1]
 connect_bd_net [get_bd_pins clk_wiz_0/clk_out1] [get_bd_pins clk_wiz_bufg/BUFG_I]
 connect_bd_net [get_bd_pins clk_wiz_bufg/BUFG_O] [get_bd_pins u_role/aclk]
+
+# Have done
+# connect_bd_net [get_bd_pins clk_wiz_0/clk_out2] [get_bd_pins eth_rst_gen/slowest_sync_clk]
+connect_bd_net [get_bd_pins clk_wiz_0/locked] [get_bd_pins eth_rst_gen/dcm_locked]
 
 disconnect_bd_net /dut_rst_gen_peripheral_aresetn [get_bd_pins dut_rst_gen/peripheral_aresetn]
 connect_bd_net [get_bd_pins dut_rst_gen/peripheral_aresetn] [get_bd_pins axi_ic_role_io_cross_domain/M02_ARESETN]
