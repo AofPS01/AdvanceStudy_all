@@ -34,16 +34,26 @@ set_property IOSTANDARD DIFF_SSTL18_I [get_ports {dut_rtc_ref_clk_clk_p[0]}]
 set_property PACKAGE_PIN D31 [get_ports {dut_rtc_ref_clk_clk_n[0]}]
 set_property PACKAGE_PIN D32 [get_ports {dut_rtc_ref_clk_clk_p[0]}]
 
+# lvds clock (625MHz)
+create_clock -period 1.600 -name lvds_clk_in -waveform {0.000 0.800} [get_ports lvdsclk_clk_p]
 
+set_property IOSTANDARD DIFF_HSTL_I_18 [get_ports lvdsclk_clk_p]
+set_property IOSTANDARD DIFF_HSTL_I_18 [get_ports lvdsclk_clk_n]
+
+set_property PACKAGE_PIN D35 [get_ports lvdsclk_clk_p]
+set_property PACKAGE_PIN D36 [get_ports lvdsclk_clk_n]
 
 # PCIe EP perstn physical location
 set_property PACKAGE_PIN BG16 [get_ports pcie_ep_perstn]
-set_property IOSTANDARD LVCMOS12 [get_ports pcie_ep_perstn]
+set_property IOSTANDARD LVCMOS33 [get_ports pcie_ep_perstn]
 
 # PCIe RP perstn physical location
 set_property PACKAGE_PIN AW15 [get_ports pcie_rp_perstn]
 set_property IOSTANDARD LVCMOS33 [get_ports pcie_rp_perstn]
 
+# To PHY reset
+set_property PACKAGE_PIN B39 [get_ports {phy_rst_b[0]}]
+set_property IOSTANDARD LVCMOS18 [get_ports {phy_rst_b[0]}]
 
 # LED
 set_property PACKAGE_PIN AA17 [get_ports ddr4_mig_calib_done]
@@ -54,6 +64,27 @@ set_property IOSTANDARD LVCMOS18 [get_ports pcie_ep_phy_ready]
 
 set_property PACKAGE_PIN AA15 [get_ports pcie_ep_lnk_up]
 set_property IOSTANDARD LVCMOS18 [get_ports pcie_ep_lnk_up]
+
+# mdio
+set_property PACKAGE_PIN A35 [get_ports mdio2phy_mdc]
+set_property PACKAGE_PIN A34 [get_ports mdio2phy_mdio_io]
+
+set_property IOSTANDARD LVCMOS18 [get_ports mdio2phy_mdc]
+set_property IOSTANDARD LVCMOS18 [get_ports mdio2phy_mdio_io]
+
+# sgmii & select
+set_property PACKAGE_PIN A39 [get_ports sgmii2phy_rxp]
+set_property PACKAGE_PIN E39 [get_ports sgmii2phy_txp]
+
+set_property IOSTANDARD DIFF_HSTL_I_18 [get_ports sgmii2phy_rxp]
+set_property IOSTANDARD DIFF_HSTL_I_18 [get_ports sgmii2phy_txp]
+
+set_property PACKAGE_PIN C38 [get_ports {RJ45SEL[0]}]
+set_property IOSTANDARD HSLVDCI_18 [get_ports {RJ45SEL[0]}]
+
+# dummyport
+set_property PACKAGE_PIN D40 [get_ports dummyport]
+set_property IOSTANDARD LVCMOS18 [get_ports dummyport]
 
 # DDR
 set_property PACKAGE_PIN AR49 [ get_ports "c0_ddr4_dq[0]" ]
