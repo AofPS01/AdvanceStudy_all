@@ -110,15 +110,17 @@
 			xlnx,odd-parity = <0>;
 			xlnx,use-parity = <0>;
 		};
-		pcie_rc0: pcie@40000000 {
+		pcie_rc0: pcie@60000000 {
 			compatible = "xlnx,xdma-host-3.00";
 			device_type = "pci";
-			reg = <0x0 0x40000000 0x0 0x20000000>; /*Root port 0 ctrl*/
+			reg = <0x0 0x60000000 0x0 0x00800000>, /*Root port 0 ctrl*/
+				  <0x0 0x50000000 0x0 0x00100000>;
 			reg-names = "rp0";
 			#address-cells = <3>;
 			#size-cells = <2>;
 			bus-range = <0 1>;
-			ranges = <0x02000000 0x00000000 0x20000000 0x0 0x20000000 0x00000000 0x04000000>;/*Root port 0 BAR*/
+			// ranges = <0x02000000 0x00000000 0x20000000 0x0 0x20000000 0x00000000 0x04000000>;
+			ranges = <0x02000000 0x00000000 0x00000000 0x0 0x00000000 0x00000000 0x00000000 0x200000000>; /*Root port 0 BAR*/
 			#interrupt-cells = <1>;
 			interrupts = <2>,  /*Root port 0 INTx*/
 			<3>,  /*Root port 0 MSI0*/
@@ -144,83 +146,41 @@
 				};
 			};
 		};
-		pcie_rc1: pcie@60000000 {
-			compatible = "xlnx,xdma-host-3.00";
-			device_type = "pci";
-			reg = <0x0 0x60000000 0x0 0x20000000>; /*Root port 0 ctrl*/
-			reg-names = "rp0";
-			#address-cells = <3>;
-			#size-cells = <2>;
-			bus-range = <0 1>;
-			ranges = <0x02000000 0x00000000 0x24000000 0x0 0x24000000 0x00000000 0x04000000>;/*Root port 0 BAR*/
-			#interrupt-cells = <1>;
-			interrupts = <5>,  /*Root port 0 INTx*/
-			<6>,  /*Root port 0 MSI0*/
-			<7>;  /*Root port 0 MSI1*/
+		axi_dma_0: dma@41e00000 {
+			compatible = "xlnx,axi-dma-1.00.a";
+			reg = <0x0 0x41e00000 0x0 0x10000>;
+			interrupts = <5>, <6>;
 			interrupt-parent = <&plic>;
-			
-			pcie_rp1: pcie@0,0 {
-				device_type = "pci";
-				reg = <0x0000 0 0 0 0>;
-				#address-cells = <3>;
-				#size-cells = <2>;
-				ranges;
-				#interrupt-cells = <1>;
-				interrupt-map-mask = <0 0 0 7>;
-				interrupt-map = <0 0 0 1 &pcie_intc1 1>,
-				<0 0 0 2 &pcie_intc1 2>,
-				<0 0 0 3 &pcie_intc1 3>,
-				<0 0 0 4 &pcie_intc1 4>;
-				pcie_intc1: interrupt-controller {
-					interrupt-controller;
-					#address-cells = <0>;
-					#interrupt-cells = <1>;
+
+			#dma-cells = <1>;
+
+			xlnx,include-sg = <1>;
+			xlnx,num-fstores = <1>;
+			xlnx,addrwidth = <32>;
+		};
+
+		axi_ethernet_0: ethernet@40c00000 {
+			compatible = "xlnx,axi-ethernet-1.00.a";
+			reg = <0x0 0x40c00000 0x0 0x40000>;
+			interrupts = <7>, <8>;
+			interrupt-parent = <&plic>;
+
+			phy-mode = "sgmii";
+
+			dmas = <&axi_dma_0 0>, <&axi_dma_0 1>;
+			dma-names = "tx_chan0", "rx_chan0";
+
+			xlnx,rxcsum = <2>;
+			xlnx,rxmem  = <0x800>;
+			xlnx,txcsum = <2>;
+
+			mdio {
+				#address-cells = <1>;
+				#size-cells = <0>;
+				phy0: ethernet-phy@1 {
+					reg = <3>;
 				};
 			};
 		};
-		// pcie@40000000 {
-		// 	compatible = "xlnx,xdma-host-3.00";
-		// 	reg = <0x0 0x40000000 0x0 0x20000000>;
-		// 	ranges = <0x2000000 0x0 0x31000000 0x0 0x31000000 0x0 0x1000000>;
-		// 	#address-cells = <3>;
-		// 	#size-cells = <2>;
-		// 	#interrupt-cells = <1>;
-		// 	device_type = "pci";
-		// 	interrupt-parent = <&plic>;
-		// 	interrupts = <0 2 4>, <0 3 4>, <0 4 4>;
-		// 	interrupt-names = "misc", "msi0", "msi1";
-		// 	interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-		// 	interrupt-map = <0 0 0 1 &pcie_intc_0 0>,
-		// 	<0 0 0 2 &pcie_intc_0 1>,
-		// 	<0 0 0 3 &pcie_intc_0 2>,
-		// 	<0 0 0 4 &pcie_intc_0 3>;
-		// 	pcie_intc_0: interrupt-controller {
-		// 		#address-cells = <0>;
-		// 		#interrupt-cells = <1>;
-		// 		interrupt-controller;
-		// 	};
-		// };
-		// pcie@60000000 {
-		// 	compatible = "xlnx,xdma-host-3.00";
-		// 	reg = <0x0 0x60000000 0x0 0x20000000>;
-		// 	ranges = <0x2000000 0x0 0x32000000 0x0 0x32000000 0x0 0x1000000>;
-		// 	#address-cells = <3>;
-		// 	#size-cells = <2>;
-		// 	#interrupt-cells = <1>;
-		// 	device_type = "pci";
-		// 	interrupt-parent = <&plic>;
-		// 	interrupts = <0 2 4>, <0 3 4>, <0 4 4>;
-		// 	interrupt-names = "misc", "msi0", "msi1";
-		// 	interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-		// 	interrupt-map = <0 0 0 1 &pcie_intc_1 0>,
-		// 	<0 0 0 2 &pcie_intc_1 1>,
-		// 	<0 0 0 3 &pcie_intc_1 2>,
-		// 	<0 0 0 4 &pcie_intc_1 3>;
-		// 	pcie_intc_1: interrupt-controller {
-		// 		#address-cells = <0>;
-		// 		#interrupt-cells = <1>;
-		// 		interrupt-controller;
-		// 	};
-		// };
 	};
 };
