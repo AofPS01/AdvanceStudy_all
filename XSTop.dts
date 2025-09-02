@@ -146,6 +146,7 @@
 				};
 			};
 		};
+
 		cpu_clk: cpu_clk {
 			compatible = "fixed-clock";
 			#clock-cells = <0>;
@@ -173,7 +174,7 @@
 			//xlnx,include-sg;                       /* Scatter-Gather mode */
 			xlnx,include-dre;                      /* DRE module */
 
-			dma-channel@40000000 {
+			dma-channel@40040000 {
 				compatible = "xlnx,axi-dma-mm2s-channel";
 				dma-channels = <0x1>;
 				interrupts = <5>;                  /* MM2S channel IRQ */
@@ -181,7 +182,7 @@
 				xlnx,device-id = <0x0>;
 			};
 
-			dma-channel@40000030 {
+			dma-channel@40040030 {
 				compatible = "xlnx,axi-dma-s2mm-channel";
 				dma-channels = <0x1>;
 				interrupts = <6>;                 /* S2MM channel IRQ */
@@ -213,7 +214,7 @@
 			mdio {
 				#address-cells = <1>;
 				#size-cells = <0>;
-				phy0: ethernet-phy@1 {
+				phy0: ethernet-phy@3 {
 					reg = <3>;
 					ti,dp83867-rxctrl-strap-quirk;
 					ti,sgmii-ref-clock-output-enable;
