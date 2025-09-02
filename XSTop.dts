@@ -214,6 +214,9 @@
 
 			max-speed = <100000>;
 
+			pcs-handle = <&phy0>;
+			phy-handle = <&phy0>;
+
 			mdio {
 				#address-cells = <1>;
 				#size-cells = <0>;
