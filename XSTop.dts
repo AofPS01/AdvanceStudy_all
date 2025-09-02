@@ -204,6 +204,8 @@
 			dmas = <&axi_dma_0 0>, <&axi_dma_0 1>;
 			dma-names = "tx_chan0", "rx_chan0";
 
+			axistream-connected = <&axi_dma_0>; /* conbine DMA controller */
+
 			xlnx,rxcsum = <2>;
 			xlnx,rxmem  = <0x800>;
 			xlnx,txcsum = <2>;
