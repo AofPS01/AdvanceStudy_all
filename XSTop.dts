@@ -146,9 +146,21 @@
 				};
 			};
 		};
-		axi_dma_0: dma@41e00000 {
+		cpu_clk: cpu_clk {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <100000000>; /* 100 MHz */
+		};
+
+		lvds_clk: lvds_clk {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <625000000>; /* 625 MHz for LVDS/SGMII ref */
+		};
+
+		axi_dma_0: dma@40040000 {
 			compatible = "xlnx,axi-dma-1.00.a";
-			reg = <0x0 0x41e00000 0x0 0x10000>;
+			reg = <0x0 0x40040000 0x0 0x10000>;
 			interrupts = <5>, <6>;
 			interrupt-parent = <&plic>;
 
@@ -156,14 +168,36 @@
 
 			xlnx,include-sg = <1>;
 			xlnx,num-fstores = <1>;
-			xlnx,addrwidth = <32>;
+			//xlnx,addrwidth = <32>;
+			xlnx,addrwidth = /bits/ 8 <0x40>;      /* 64 bits address bus */
+			//xlnx,include-sg;                       /* Scatter-Gather mode */
+			xlnx,include-dre;                      /* DRE module */
+
+			dma-channel@40000000 {
+				compatible = "xlnx,axi-dma-mm2s-channel";
+				dma-channels = <0x1>;
+				interrupts = <5>;                  /* MM2S channel IRQ */
+				xlnx,datawidth = <0x40>;
+				xlnx,device-id = <0x0>;
+			};
+
+			dma-channel@40000030 {
+				compatible = "xlnx,axi-dma-s2mm-channel";
+				dma-channels = <0x1>;
+				interrupts = <6>;                 /* S2MM channel IRQ */
+				xlnx,datawidth = <0x40>;
+				xlnx,device-id = <0x0>;
+			};
 		};
 
-		axi_ethernet_0: ethernet@40c00000 {
+		axi_ethernet_0: ethernet@40000000 {
 			compatible = "xlnx,axi-ethernet-1.00.a";
-			reg = <0x0 0x40c00000 0x0 0x40000>;
+			reg = <0x0 0x40000000 0x0 0x40000>;
 			interrupts = <7>, <8>;
 			interrupt-parent = <&plic>;
+
+			clocks = <&cpu_clk>, <&lvds_clk>;
+			clock-names = "s_axi_lite_clk", "sgmii_clk";
 
 			phy-mode = "sgmii";
 
@@ -174,11 +208,18 @@
 			xlnx,rxmem  = <0x800>;
 			xlnx,txcsum = <2>;
 
+			local-mac-address = [00 0a 35 01 dd dd];
+
 			mdio {
 				#address-cells = <1>;
 				#size-cells = <0>;
 				phy0: ethernet-phy@1 {
 					reg = <3>;
+					ti,dp83867-rxctrl-strap-quirk;
+					ti,sgmii-ref-clock-output-enable;
+					ti,fifo-depth = <0x1>;
+					ti,rx-internal-delay = <0x8>;
+					ti,tx-internal-delay = <0xa>;
 				};
 			};
 		};
