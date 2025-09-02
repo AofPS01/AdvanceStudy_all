@@ -210,6 +210,8 @@
 
 			local-mac-address = [00 0a 35 01 dd dd];
 
+			max-speed = <100000>;
+
 			mdio {
 				#address-cells = <1>;
 				#size-cells = <0>;
