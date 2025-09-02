@@ -119,10 +119,7 @@
 			#address-cells = <3>;
 			#size-cells = <2>;
 			bus-range = <0 1>;
-			// ranges = <0x02000000 0x00000000 0x20000000 0x0 0x20000000 0x00000000 0x04000000>;
-			ranges = <0x02000000 0x00000000 0x00000000
-					  0x00000000 0x00000000
-					  0x00000002 0x00000000>; /*Root port 0 BAR*/
+			ranges = <0x02000000 0x00000000 0x20000000 0x0 0x20000000 0x00000000 0x04000000>; /*Root port 0 BAR*/
 			#interrupt-cells = <1>;
 			interrupts = <2>,  /*Root port 0 INTx*/
 			<3>,  /*Root port 0 MSI0*/
