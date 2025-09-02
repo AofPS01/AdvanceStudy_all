@@ -410,6 +410,7 @@ proc create_root_design { parentCell } {
     CONFIG.c_include_s2mm_dre {1} \
     CONFIG.c_sg_length_width {16} \
     CONFIG.c_sg_use_stsapp_length {1} \
+    CONFIG.c_addr_width {48} \
     ] $axi_ethernet_dma
 
   # Create instance: axi_ic_eth_dma, and set properties
@@ -1006,12 +1007,17 @@ connect_bd_net [get_bd_pins intr_sync_dut/slow_intr] [get_bd_pins u_role/s2r_int
 
 #Create ILA
 create_bd_cell -type ip -vlnv xilinx.com:ip:system_ila:1.1 system_ila_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:system_ila:1.1 system_ila_1
 
 set_property -dict [list CONFIG.C_BRAM_CNT {6} CONFIG.C_NUM_MONITOR_SLOTS {2}] [get_bd_cells system_ila_0]
 connect_bd_intf_net [get_bd_intf_pins system_ila_0/SLOT_0_AXI] [get_bd_intf_pins u_role/m_axi_mem]
 connect_bd_net [get_bd_pins system_ila_0/clk] [get_bd_pins ddr4_mig/addn_ui_clkout1]
 connect_bd_intf_net [get_bd_intf_pins system_ila_0/SLOT_1_AXI] [get_bd_intf_pins u_role/m_axi_io]
 connect_bd_net [get_bd_pins system_ila_0/resetn] [get_bd_pins dut_rst_gen/peripheral_aresetn]
+
+connect_bd_net [get_bd_pins system_ila_1/clk] [get_bd_pins clk_wiz_0/clk_out2]
+connect_bd_intf_net [get_bd_intf_pins system_ila_1/SLOT_0_AXI] -boundary_type upper [get_bd_intf_pins axi_ic_eth_dma/M00_AXI]
+connect_bd_net [get_bd_pins system_ila_1/resetn] [get_bd_pins eth_rst_gen/peripheral_aresern]
 
 #=============================================
 # Ethernet connection
